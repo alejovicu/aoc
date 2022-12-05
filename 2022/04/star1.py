@@ -4,28 +4,21 @@ def debug(log_message):
     if debug_enabled:
         print(f"[{datetime.datetime.now()}] - [DEBUG] - {log_message}")
 
-def list_contains_other_list(list1,list2):
-    list1_str = ''.join([str(x) for x in list1])
-    list2_str = ''.join([str(x) for x in list2]) 
-    return list1_str in list2_str or list2_str in list1_str
-
 def get_elf_section(elf):
     range_pair=elf.strip().split("-")
-    section_list = list(range(int(range_pair[0]),int(range_pair[1])+1))
-    return section_list
+    return set(range(int(range_pair[0]),int(range_pair[1])+1))
 
 def is_section_contained_in_other(elf1, elf2):
     section1=get_elf_section(elf1)
     section2=get_elf_section(elf2)
-    return list_contains_other_list(section1, section2)
+    return section1.issubset(section2) or section2.issubset(section1)
 
 def get_total(file_name):
     total = 0
     with open(file_name) as f:
         for index, line in enumerate(f):
             elf_pair=line.strip().split(",")
-            if(is_section_contained_in_other(elf_pair[0],elf_pair[1])):
-              total = total + 1
+            total += 1 if is_section_contained_in_other(elf_pair[0],elf_pair[1]) else 0
     return total
 
 ### TESTS
