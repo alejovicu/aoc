@@ -1,11 +1,19 @@
 def debug(log_message):
     import datetime;
     debug_enabled = False
+    # debug_enabled = True
     if debug_enabled:
         print(f"[{datetime.datetime.now()}] - [DEBUG] - {log_message}")
 
 def detects_start_of_packet_marker(text):
-    # TODO
+    for i in range(len(text)):
+        marker_str = text[i:i+4]
+        marker_set = set([ char for char in marker_str])
+        debug(f"i: {i}")
+        debug(f"marker_str: {marker_str}")
+        debug(f"marker_set: {marker_set}")
+        if len(marker_str) == len(marker_set):
+            return text.find(marker_str)+4
     return 0
 
 def get_total(file_name):
@@ -20,6 +28,10 @@ def get_total(file_name):
 
 
 ### TESTS
+test_result = detects_start_of_packet_marker('mjqjpqmgbljsphdztnvjfqwrcgsmlb')
+test_expected_result = 7
+if test_result != test_expected_result:
+    raise Exception(f"TEST_0 FAILED: Expected value: {test_expected_result}, got: {test_result}")
 
 test_result = detects_start_of_packet_marker('bvwbjplbgvbhsrlpgdmjqwftvncz')
 test_expected_result = 5
@@ -43,7 +55,7 @@ if test_result != test_expected_result:
 
 
 test_result = get_total("input_test")
-expected_result = 2
+expected_result = 7
 if test_result != expected_result:
     raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
 
