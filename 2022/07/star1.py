@@ -32,12 +32,13 @@ def process_ls(console_output, fs_tree, current_path,last_line_proccesed):
     while console_output[last_line_proccesed][0] != '$':
         debug(console_output[last_line_proccesed])
         if console_output[last_line_proccesed][0] == 'dir' :
-            # TODO get list of directories under current path
-            if console_output[last_line_proccesed][1] not in fs_tree:
-                fs_tree[console_output[last_line_proccesed][1]]
-            else:
-                fs_tree[path] = Node(path, parent = fs_tree[current_path], type='dir')
-                current_path = fs_tree[path]
+            dirname = console_output[last_line_proccesed][1]
+            if dirname not in get_directories_under_path(current_path):
+                fs_tree[dirname] = Node(dirname, parent = current_path, type='dir')
+        else :
+            filename = console_output[last_line_proccesed][1]
+            fs_tree[filename] = Node(filename, parent = current_path, type='dir', size=console_output[last_line_proccesed][0])
+
         last_line_proccesed = last_line_proccesed + 1
     return fs_tree, last_line_proccesed
 
