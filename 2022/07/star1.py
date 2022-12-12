@@ -4,6 +4,10 @@ def debug(log_message):
     if debug_enabled:
         print(f"[{datetime.datetime.now()}] - [DEBUG] - {log_message}")
 
+def get_directiory_size(tree, command):
+    # TODO
+    return 0
+
 def process_cd(tree, command):
     # TODO
     return 0
@@ -16,6 +20,7 @@ def get_total(file_name):
     total = 0
 
     file_system_tree = None
+    current_path = None
     input_file = open(file_name, 'r')
     for line in input_file:
         total += f2(line.strip())
