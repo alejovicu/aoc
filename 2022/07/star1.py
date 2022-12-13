@@ -1,4 +1,4 @@
-from anytree import Node, RenderTree
+from anytree import Node, findall_by_attr
 
 def debug(log_message):
     import datetime;
@@ -13,8 +13,11 @@ def get_directories_under_path(current_path):
 
 def get_directiory_size(current_path):
     debug(f'get_directiory_size: {current_path}')
-    # TODO do it recursively
-    return  sum([file.size for file in list(filter(lambda node: node.type == 'file', [children for children in current_path.children]))])
+    files = list(findall_by_attr(current_path, name='type' , value='file'))
+    sum = 0
+    for file in files:
+        sum = sum + int(file.size)
+    return  sum
 
 def process_cd(path, fs_tree, current_path, last_line_proccesed):
     debug(f'process_cd: {path}')
@@ -46,7 +49,7 @@ def process_ls(console_output, fs_tree, current_path,last_line_proccesed):
                 fs_tree[dirname] = Node(dirname, parent = current_path, type='dir')
         else :
             filename = console_output[last_line_proccesed][1]
-            fs_tree[filename] = Node(filename, parent = current_path, type='dir', size=console_output[last_line_proccesed][0])
+            fs_tree[filename] = Node(filename, parent = current_path, type='file', size=console_output[last_line_proccesed][0])
 
         last_line_proccesed = last_line_proccesed + 1
 
@@ -99,20 +102,24 @@ def get_total(file_name):
     input_file.close()
 
     file_system_tree = get_file_system(console_output_arr)
-    debug(file_system_tree)
-    # debug([node for node in file_system_tree])
-    # limit=100000
-    # directories_over_limit=[]
-    # for directory in list(filter(lambda node: node.type == 'dir', [node for node in file_system_tree])):
-    #     print(f'directory: {directory.name} size: {get_directiory_size(directory)}')
+    directories = findall_by_attr(file_system_tree['/'], name='type' , value='dir')
+    debug(f"list all nodes: {[node for node in file_system_tree]}")
+    debug(f"list directories: {directories}")
+    limit=100000
+    directories_over_limit=[]
+    for directory in directories:
+        print(f'directory: {directory.name} size: {get_directiory_size(directory)}')
+        directiory_size = get_directiory_size(directory)
+        if get_directiory_size(directory) >= limit:
+           directories_over_limit.append(directiory_size)
 
-    return total
+    return sum(directories_over_limit)
 
 ### TESTS
 test_root = Node('/', type='dir')
 test_path1 = Node('a', type='dir', parent = test_root)
 test_path2 = Node('b', type='dir', parent = test_root)
-test_file1 = Node('a_file.txt', type='file', parent = test_root, size=1234)
+test_file1 = Node('a_file.txt', type='file', parent = test_root, size='1234')
 test_result = get_directories_under_path(test_root)
 test_expected_result = ['a', 'b']
 if test_result != test_expected_result:
@@ -121,16 +128,16 @@ if test_result != test_expected_result:
 test_root = Node('/', type='dir')
 test_path1 = Node('a', type='dir', parent = test_root)
 test_path2 = Node('b', type='dir', parent = test_root)
-test_file1 = Node('a_file.txt', type='file', parent = test_root, size=1000)
-test_file2 = Node('a_file.txt', type='file', parent = test_root, size=300)
+test_file1 = Node('a_file.txt', type='file', parent = test_root, size='1000')
+test_file2 = Node('a_file.txt', type='file', parent = test_root, size='300')
 test_result = get_directiory_size(test_root)
 test_expected_result = 1300
 if test_result != test_expected_result:
     raise Exception(f"TEST_2 FAILED: Expected value: {test_expected_result}, got: {test_result}")
 
-test_result = get_total("input_test")
-expected_result = 95437
-if test_result != expected_result:
-    raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
+# test_result = get_total("input_test")
+# expected_result = 73314807
+# if test_result != expected_result:
+#     raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
 
-# print(f"Result: {get_total('input')}")
+print(f"Result: {get_total('input')}")
