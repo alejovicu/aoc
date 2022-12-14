@@ -1,4 +1,4 @@
-from anytree import Node, findall_by_attr
+from anytree import Node, findall_by_attr, RenderTree
 
 def debug(log_message):
     import datetime;
@@ -6,6 +6,13 @@ def debug(log_message):
     debug_enabled = True
     if debug_enabled:
         print(f"[{datetime.datetime.now()}] - [DEBUG] - {log_message}")
+
+def print_tree(fs_tree):
+    for pre, fill, node in RenderTree(fs_tree['/']):
+        if node.type == 'dir':
+            debug(f"{pre}{node.name} - ({node.type})")
+        else:
+            debug(f"{pre}{node.name} - ({node.type}) size: ({node.size})")
 
 def get_directories_under_path(current_path):
     debug(f'get_directories_under_path: {current_path}')
@@ -20,23 +27,25 @@ def get_directiory_size(current_path):
     return  sum
 
 def process_cd(path, fs_tree, current_path, last_line_proccesed):
-    debug(f'process_cd: {path}')
+    debug(f'process_cd to "{path}" from {current_path}')
     if path == '/' :
         current_path = fs_tree['/']
     elif path == '..' :
         current_path = current_path.parent
     else:
         if path in get_directories_under_path(current_path):
-            current_path = fs_tree[path]
+            debug(f'setting dir: "{path}" under: "{current_path}"')
+            current_path = list(filter(lambda node: node.name == path and node.type == 'dir', [children for children in current_path.children]))[0]
         else:
-            fs_tree[path] = Node(path, parent = fs_tree[current_path], type='dir')
-            current_path = fs_tree[path]
+            debug(f'creating dir: {path} under: {fs_tree[current_path].name}')
+            fs_tree[f'{current_path.name}/{path}'] = Node(path, parent = fs_tree[current_path], type='dir')
+            current_path = fs_tree[f'{fs_tree[current_path].name}/{path}']
 
     last_line_proccesed = last_line_proccesed + 1
     return fs_tree, current_path, last_line_proccesed
 
 def process_ls(console_output, fs_tree, current_path,last_line_proccesed):
-    debug(f'process_ls: {console_output[last_line_proccesed]}')
+    debug(f'process_ls: {console_output[last_line_proccesed]} in path: {current_path}')
     last_line_proccesed = last_line_proccesed + 1
     while (last_line_proccesed < len(console_output)):
         if console_output[last_line_proccesed][0] == '$':
@@ -46,13 +55,14 @@ def process_ls(console_output, fs_tree, current_path,last_line_proccesed):
         if console_output[last_line_proccesed][0] == 'dir' :
             dirname = console_output[last_line_proccesed][1]
             if dirname not in get_directories_under_path(current_path):
-                fs_tree[dirname] = Node(dirname, parent = current_path, type='dir')
+                fs_tree[f'{current_path.name}/{dirname}'] = Node(dirname, parent = current_path, type='dir')
         else :
             filename = console_output[last_line_proccesed][1]
-            fs_tree[filename] = Node(filename, parent = current_path, type='file', size=console_output[last_line_proccesed][0])
+            fs_tree[f'{current_path.name}/{filename}'] = Node(filename, parent = current_path, type='file', size=console_output[last_line_proccesed][0])
 
+        print_tree(fs_tree)
         last_line_proccesed = last_line_proccesed + 1
-
+    debug(f'process_ls Done current path state: {current_path}')
     return fs_tree, last_line_proccesed
 
 def process_command(console_output, last_line_proccesed, file_system_tree, current_path):
@@ -91,17 +101,19 @@ def get_file_system(console_output):
     debug(f'file_system_tree: {file_system_tree}')
     return file_system_tree
 
-def get_total(file_name):
-    total = 0
-
-
+def get_fs_tree_from_file(file_name):
     console_output_arr=[]
     input_file = open(file_name, 'r')
     for line in input_file:
         console_output_arr.append(line.strip().split(' '))
     input_file.close()
 
-    file_system_tree = get_file_system(console_output_arr)
+    return get_file_system(console_output_arr)
+
+def get_total(file_name):
+    total = 0
+
+    file_system_tree = get_fs_tree_from_file(file_name)
     directories = findall_by_attr(file_system_tree['/'], name='type' , value='dir')
     debug(f"list all nodes: {[node for node in file_system_tree]}")
     debug(f"list directories: {directories}")
@@ -115,7 +127,8 @@ def get_total(file_name):
 
     return sum(directories_over_limit)
 
-### TESTS
+## TESTS
+debug('****************** TEST 1 *************\n\n')
 test_root = Node('/', type='dir')
 test_path1 = Node('a', type='dir', parent = test_root)
 test_path2 = Node('b', type='dir', parent = test_root)
@@ -125,6 +138,7 @@ test_expected_result = ['a', 'b']
 if test_result != test_expected_result:
     raise Exception(f"TEST_1 FAILED: Expected value: {test_expected_result}, got: {test_result}")
 
+debug('****************** TEST 2 *************\n\n')
 test_root = Node('/', type='dir')
 test_path1 = Node('a', type='dir', parent = test_root)
 test_path2 = Node('b', type='dir', parent = test_root)
@@ -135,9 +149,26 @@ test_expected_result = 1300
 if test_result != test_expected_result:
     raise Exception(f"TEST_2 FAILED: Expected value: {test_expected_result}, got: {test_result}")
 
-# test_result = get_total("input_test")
-# expected_result = 73314807
-# if test_result != expected_result:
-#     raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
+debug('****************** TEST 3-a *************\n\n')
+fs_tree = get_fs_tree_from_file("input_test")
+print(f"tree: {fs_tree}")
+test_result = get_directiory_size(fs_tree['a/e'])
+test_expected_result = 584
+if test_result != test_expected_result:
+    raise Exception(f"TEST_3-a FAILED: Expected value: {test_expected_result}, got: {test_result}")
 
+debug('****************** TEST 3-b *************\n\n')
+test_result = get_directiory_size(fs_tree['/a'])
+test_expected_result = 94853
+if test_result != test_expected_result:
+    raise Exception(f"TEST_3-b FAILED: Expected value: {test_expected_result}, got: {test_result}")
+
+
+debug('****************** TEST Input *************\n\n')
+fs_tree = get_total("input_test")
+expected_result = 95437
+if test_result != expected_result:
+    raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
+
+debug('\n\n****************** Execution *************\n\n')
 print(f"Result: {get_total('input')}")
