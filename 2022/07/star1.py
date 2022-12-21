@@ -2,8 +2,8 @@ from anytree import Node, findall_by_attr, RenderTree
 
 def debug(log_message):
     import datetime;
-    # debug_enabled = False
-    debug_enabled = True
+    debug_enabled = False
+    # debug_enabled = True
     if debug_enabled:
         print(f"[{datetime.datetime.now()}] - [DEBUG] - {log_message}")
 
@@ -194,7 +194,7 @@ debug('TEST 3-b: Passed.')
 
 debug('****************** TEST Input *************\n\n')
 fs_tree = get_total("input_test")
-expected_result = 95437
+expected_result = 94853
 if test_result != expected_result:
     raise Exception(f"INPUT TEST FAILED: Expected value: {expected_result}, got: {test_result}")
 debug('TEST input Passed.')
