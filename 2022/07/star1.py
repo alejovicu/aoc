@@ -14,6 +14,14 @@ def print_tree(fs_tree):
         else:
             debug(f"{pre}{node.name} - ({node.type}) size: ({node.size})")
 
+def get_node_path(node):
+    debug(f'get_node_path: {get_node_path}')
+    path = f"{node.name}"
+    while(node.parent is not None):
+        node = node.parent
+        path = f"{node.name}/{path}"
+    return path
+
 def get_directories_under_path(current_path):
     debug(f'get_directories_under_path: {current_path}')
     return [directory.name for directory in list(filter(lambda node: node.type == 'dir', [children for children in current_path.children]))]
@@ -37,10 +45,10 @@ def process_cd(path, fs_tree, current_path, last_line_proccesed):
             debug(f'process_cd setting dir: "{path}" under: "{current_path}"')
             current_path = list(filter(lambda node: node.name == path and node.type == 'dir', [children for children in current_path.children]))[0]
         else:
-            key_in_tree_array = f'{current_path.name}/{path}'
-            debug(f'process_cd creating dir: {path} under: {fs_tree[current_path].name} whith key {key_in_tree_array}')
-            fs_tree[key_in_tree_array] = Node(path, parent = fs_tree[current_path], type='dir')
-            current_path = fs_tree[f'{fs_tree[current_path].name}/{path}']
+            node = Node(path, parent = fs_tree[current_path], type='dir')
+            node_path = get_node_path(node)
+            fs_tree[node_path] = node
+            current_path = fs_tree[node_path]
 
     last_line_proccesed = last_line_proccesed + 1
     return fs_tree, current_path, last_line_proccesed
@@ -56,14 +64,14 @@ def process_ls(console_output, fs_tree, current_path,last_line_proccesed):
         if console_output[last_line_proccesed][0] == 'dir' :
             dirname = console_output[last_line_proccesed][1]
             if dirname not in get_directories_under_path(current_path):
-                key_in_tree_array = f'{current_path.path}/{dirname}'
-                debug(f'process_ls creating dir: {dirname} under: {current_path} whith key {key_in_tree_array}')
-                fs_tree[key_in_tree_array] = Node(dirname, parent = current_path, type='dir')
+                node = Node(dirname, parent = current_path, type='dir')
+                node_path = get_node_path(node)
+                fs_tree[node_path] = node
         else :
             filename = console_output[last_line_proccesed][1]
-            key_in_tree_array = f'{current_path.name}/{filename}'
-            debug(f'process_ls creating file: {filename} under: {current_path.name} whith key {key_in_tree_array}')
-            fs_tree[key_in_tree_array] = Node(filename, parent = current_path, type='file', size=console_output[last_line_proccesed][0])
+            node = Node(filename, parent = current_path, type='file', size=console_output[last_line_proccesed][0])
+            node_path = get_node_path(node)
+            fs_tree[node_path] = node
 
         print_tree(fs_tree)
         last_line_proccesed = last_line_proccesed + 1
@@ -119,7 +127,7 @@ def get_total(file_name):
     total = 0
 
     file_system_tree = get_fs_tree_from_file(file_name)
-    directories = findall_by_attr(file_system_tree['/'], name='type' , value='dir')
+    directories = findall_by_attr(file_system_tree['root'], name='type' , value='dir')
     debug(f"list all nodes: {[node for node in file_system_tree]}")
     debug(f"list directories: {directories}")
     limit=100000
@@ -156,17 +164,28 @@ if test_result != test_expected_result:
     raise Exception(f"TEST_2 FAILED: Expected value: {test_expected_result}, got: {test_result}")
 debug('TEST 2: Passed.')
 
-debug('****************** TEST 3-a *************\n\n')
+debug('****************** TEST 3 *************\n\n')
+test_root = Node('root', type='dir')
+test_p1 = Node('a', type='dir', parent = test_root)
+test_p2 = Node('b', type='dir', parent = test_root)
+test_p1p1 = Node('c', type='dir', parent = test_p1)
+test_result = get_node_path(test_p1p1)
+test_expected_result = 'root/a/c'
+if test_result != test_expected_result:
+    raise Exception(f"TEST_3 FAILED: Expected value: {test_expected_result}, got: {test_result}")
+debug('TEST 3: Passed.')
+
+debug('****************** TEST 4-a *************\n\n')
 fs_tree = get_fs_tree_from_file("input_test")
 debug(f"tree: {fs_tree}")
-test_result = get_directiory_size(fs_tree['a/e'])
+test_result = get_directiory_size(fs_tree['root/a/e'])
 test_expected_result = 584
 if test_result != test_expected_result:
-    raise Exception(f"TEST_3-a FAILED: Expected value: {test_expected_result}, got: {test_result}")
+    raise Exception(f"TEST_4-a FAILED: Expected value: {test_expected_result}, got: {test_result}")
 debug('TEST 3-a: Passed.')
 
 debug('****************** TEST 3-b *************\n\n')
-test_result = get_directiory_size(fs_tree['/a'])
+test_result = get_directiory_size(fs_tree['root/a'])
 test_expected_result = 94853
 if test_result != test_expected_result:
     raise Exception(f"TEST_3-b FAILED: Expected value: {test_expected_result}, got: {test_result}")
