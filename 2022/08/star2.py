@@ -45,7 +45,7 @@ def get_trees_scenic_score(grid):
       view_count_bottom = 0
       for i in range(row+1, rows):
         if grid[i][col] < tree:
-          view_count_bottom = view_count_bottom +1 
+          view_count_bottom = view_count_bottom +1
         else:
           view_count_bottom = view_count_bottom + 1
           break
