@@ -24,15 +24,15 @@ def get_total(file_name):
 
 ### TESTS
 
-test1_result = f2('test_value')
-test1_expected_result = True
-if test1_result != test1_expected_result:
-    raise Exception(f"TEST_1 FAILED: Expected value: {test1_expected_result}, got: {test1_result}")
+test_result = f2('test_value')
+test_expected_result = True
+if test_result != test_expected_result:
+    raise Exception(f"TEST 1 FAILED: Expected value: {test_result}, got: {test_expected_result}")
 
-test2_result = f2('test_value')
-test2_expected_result = True
-if test2_result != test2_expected_result:
-    raise Exception(f"TEST_2 FAILED: Expected value: {test2_expected_result}, got: {test2_result}")
+test_result = f2('test_value')
+test_expected_result = True
+if test_result != test_expected_result:
+    raise Exception(f"TEST 2 FAILED: Expected value: {test_result}, got: {test_expected_result}")
 
 test_result = get_total("input_test")
 expected_result = 2
